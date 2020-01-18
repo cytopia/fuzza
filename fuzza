@@ -274,9 +274,12 @@ def main():
                     print("Init Awaiting: %s" % (recv))
                     succ, data = receive(s, 1024)
                     if not succ:
-                        print(data, file=sys.stderr)
-                        print_crashlog(prefix, suffix, char, buff)
-                        sys.exit(0)
+                        if multiplier == imulti:
+                            print(data, file=sys.stderr)
+                            sys.exit(1)
+                        else:
+                            print_crashlog(prefix, suffix, char, buff)
+                            sys.exit(0)
                     print("Init Received: %s" % (data))
                     if data != recv and not bool(re.search(recv, data)):
                         print_crashlog(prefix, suffix, char, buff)
