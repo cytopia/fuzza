@@ -22,6 +22,62 @@ DELAY = 1.0
 
 
 # -------------------------------------------------------------------------------------------------
+# FUNCTIONS
+# -------------------------------------------------------------------------------------------------
+
+
+def b2str(data):
+    """Convert bytes into string type."""
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        pass
+    try:
+        return data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        pass
+    try:
+        return data.decode("ascii")
+    except UnicodeDecodeError:
+        return data.decode("latin-1")
+
+
+def print_crashlog(prefix, suffix, char, buff):
+    payload = prefix + buff + suffix
+    print('\nRemote service (most likely) crashed at %s bytes of "%s"' % (str(len(buff)), char))
+    print("Payload sent:\n%s" % (payload))
+
+
+def receive(s, bufsize=1024):
+    """Read one newline terminated line from a connected socket."""
+    data = ""
+    size = len(data)
+
+    while True:
+        try:
+            data += b2str(s.recv(bufsize))
+        except socket.error as err:
+            return (False, err)
+        if not data:
+            return (False, "upstream connection is gone while receiving")
+        # Newline terminates the read request
+        if data.endswith("\n"):
+            break
+        if data.endswith("\r"):
+            break
+        # Sometimes a newline is missing at the end
+        # If this round has the same data length as previous, we're done
+        if size == len(data):
+            break
+        size = len(data)
+    # Remove trailing newlines
+    data = data.rstrip("\r\n")
+    data = data.rstrip("\n")
+    data = data.rstrip("\r")
+    return (True, data)
+
+
+# -------------------------------------------------------------------------------------------------
 # ARGS
 # -------------------------------------------------------------------------------------------------
 
@@ -50,7 +106,7 @@ def get_args():
         "-v",
         "--version",
         action="version",
-        version="%(prog)s 0.1.0 by cytopia",
+        version="%(prog)s 0.2.0 by cytopia",
         help="Show version information,",
     )
     parser.add_argument(
@@ -101,6 +157,15 @@ def get_args():
         + str(ROUND_MULTIPLIER),
     )
     parser.add_argument(
+        "-a",
+        "--answer",
+        metavar="str",
+        required=False,
+        default=None,
+        type=str,
+        help="If specified, will stop if answer is not received from endpoint. Regex supported.",
+    )
+    parser.add_argument(
         "-d",
         "--delay",
         metavar="float",
@@ -112,12 +177,6 @@ def get_args():
     parser.add_argument("host", type=str, help="address to connect to.")
     parser.add_argument("port", type=_args_check_port, help="port to connect to.")
     return parser.parse_args()
-
-
-def print_crashlog(prefix, suffix, char, buff):
-    payload = prefix + buff + suffix
-    print('\nRemote service (most likely) crashed at %s bytes of "%s"' % (str(len(buff)), char))
-    print("Payload sent:\n%s" % (payload))
 
 
 # -------------------------------------------------------------------------------------------------
@@ -183,6 +242,13 @@ def main():
                 print(msg, file=sys.stderr)
                 sys.exit(1)
             else:
+                print_crashlog(prefix, suffix, char, buff)
+                sys.exit(0)
+
+        if args.answer is not None:
+            succ, data = receive(s, 1024)
+            if not succ:
+                print(data, file=sys.stderr)
                 print_crashlog(prefix, suffix, char, buff)
                 sys.exit(0)
 
