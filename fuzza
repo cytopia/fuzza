@@ -25,6 +25,7 @@ DELAY = 1.0
 # ARGS
 # -------------------------------------------------------------------------------------------------
 
+
 def _args_check_port(value):
     """Check arguments for invalid port number."""
     min_port = 1
@@ -33,16 +34,18 @@ def _args_check_port(value):
     try:
         intvalue = int(value)
     except ValueError:
-        raise argparse.ArgumentTypeError("\"%s\" is an invalid port number." % value)
+        raise argparse.ArgumentTypeError('"%s" is an invalid port number.' % value)
 
     if intvalue < min_port or intvalue > max_port:
-        raise argparse.ArgumentTypeError("\"%s\" is an invalid port number." % value)
+        raise argparse.ArgumentTypeError('"%s" is an invalid port number.' % value)
     return intvalue
 
 
 def get_args():
     """Retrieve command line arguments."""
-    parser = argparse.ArgumentParser(description="Customizable TCP fuzzing tool to test for remote buffer overflows.")
+    parser = argparse.ArgumentParser(
+        description="Customizable TCP fuzzing tool to test for remote buffer overflows."
+    )
     parser.add_argument(
         "-v",
         "--version",
@@ -57,7 +60,7 @@ def get_args():
         required=False,
         default=CHAR,
         type=str,
-        help="Buffer character to send as payload. Default: \"" + CHAR + "\"",
+        help='Buffer character to send as payload. Default: "' + CHAR + '"',
     )
     parser.add_argument(
         "-p",
@@ -84,7 +87,8 @@ def get_args():
         required=False,
         default=INIT_MULTIPLIER,
         type=int,
-        help="Initial multiplier to concat buffer string with x*char. Default: " + str(INIT_MULTIPLIER),
+        help="Initial multiplier to concat buffer string with x*char. Default: "
+        + str(INIT_MULTIPLIER),
     )
     parser.add_argument(
         "-r",
@@ -93,7 +97,8 @@ def get_args():
         required=False,
         default=ROUND_MULTIPLIER,
         type=int,
-        help="Round multiplier to concat buffer string with x*char every round. Default: " + str(ROUND_MULTIPLIER),
+        help="Round multiplier to concat buffer string with x*char every round. Default: "
+        + str(ROUND_MULTIPLIER),
     )
     parser.add_argument(
         "-d",
@@ -111,13 +116,14 @@ def get_args():
 
 def print_crashlog(prefix, suffix, char, buff):
     payload = prefix + buff + suffix
-    print("\nRemote service (most likely) crashed at %s bytes of \"%s\"" % (str(len(buff)), char))
+    print('\nRemote service (most likely) crashed at %s bytes of "%s"' % (str(len(buff)), char))
     print("Payload sent:\n%s" % (payload))
 
 
 # -------------------------------------------------------------------------------------------------
 # MAIN ENTRYPOINT
 # -------------------------------------------------------------------------------------------------
+
 
 def main():
     """Start the program."""
@@ -165,7 +171,7 @@ def main():
                 print_crashlog(prefix, suffix, char, buff)
                 sys.exit(0)
 
-        print("Sending \"%s\" + \"%s\"*%s + \"%s\"" % (prefix, char, multiplier, suffix))
+        print('Sending "%s" + "%s"*%s + "%s"' % (prefix, char, multiplier, suffix))
         try:
             buff = char * multiplier
             string = prefix + buff + suffix
