@@ -17,7 +17,7 @@ pip install fuzza
 
 
 ## Usage
-```
+```bash
 $ fuzza --help
 
 usage: fuzza [-h] [-v] [-c char] [-p str] [-s str] [-l int] [-m int] [-i str]
@@ -68,7 +68,7 @@ example:
 * [CVE-2003-0264](https://www.cvedetails.com/cve/CVE-2003-0264/) - buffer overflow in password.
 
 To see how the raw communication works, have a look at the following netcat snippet:
-```
+```bash
 $ nc mail.example.tld 110
 +OK POP3 server mail.example.tld ready <00001.544405549@mail.example.tld>
 USER test
@@ -78,7 +78,7 @@ PASS LongPassword
 
 In order to fuzz the password, all previous communication must have happened. By using `fuzza`,
 this can be achieved with the `-i` argument to specify initial data to be send and received:
-```
+```bash
 $ fuzz -i ':.*OK POP3.*,USER test:.*test welcome.*' -p 'PASS ' mail.example.tld 110
 
 ------------------------------------------------------------
