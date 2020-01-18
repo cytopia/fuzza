@@ -35,7 +35,7 @@ pydocstyle:
 	docker run --rm -v $(PWD):/data cytopia/pydocstyle fuzza
 
 black:
-	docker run --rm -v ${PWD}:/data cytopia/black -l 100 fuzza
+	docker run --rm -v ${PWD}:/data cytopia/black -l 100 --check --diff fuzza
 
 
 # -------------------------------------------------------------------------------------------------
