@@ -1,11 +1,14 @@
 # fuzza
 
+[![](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![PyPI](https://img.shields.io/pypi/v/fuzza)](https://pypi.org/project/fuzza/)
 [![PyPI - Status](https://img.shields.io/pypi/status/fuzza)](https://pypi.org/project/fuzza/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/fuzza)](https://pypi.org/project/fuzza/)
 [![PyPI - Format](https://img.shields.io/pypi/format/fuzza)](https://pypi.org/project/fuzza/)
 [![PyPI - Implementation](https://img.shields.io/pypi/implementation/fuzza)](https://pypi.org/project/fuzza/)
 [![PyPI - License](https://img.shields.io/pypi/l/fuzza)](https://pypi.org/project/fuzza/)
+
+[![Build Status](https://github.com/cytopia/fuzza/workflows/linting/badge.svg)](https://github.com/cytopia/fuzza/actions?workflow=linting)
 
 Customizable TCP fuzzing tool to test for remote buffer overflows.
 
