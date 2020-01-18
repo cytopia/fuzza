@@ -19,6 +19,7 @@ PREFIX = ""
 SUFFIX = ""
 INIT_MULTIPLIER = 100
 ROUND_MULTIPLIER = 100
+TIMEOUT = 30.0
 DELAY = 1.0
 
 
@@ -49,7 +50,7 @@ def print_crashlog(prefix, suffix, char, buff):
     print("Payload sent:\n%s" % (payload))
 
 
-def receive(s, bufsize=1024, timeout=10.0):
+def receive(s, timeout, bufsize=1024):
     """Read one newline terminated line from a connected socket."""
     data = ""
     size = len(data)
@@ -110,9 +111,18 @@ def _args_check_port(value):
 def get_args():
     """Retrieve command line arguments."""
     parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
         description="Customizable TCP fuzzing tool to test for remote buffer overflows.",
         epilog="""\
-EXAMPLE:
+example:\n
+
+  The following example illustrates how to use the initial communication by:
+      1. Expecting the POP3 server banner
+      2. Sending 'USER bob'
+      3. Expecting a welcome message
+  Additionally before sending the fuzzing characters, it is prepended with 'PASS ',
+  so that the actuall fuzzing can be done on the password:
+      $ fuzza -i ':.*POP3.*,USER bob:.*welcome.*' -p 'PASS '
 """,
     )
     parser.add_argument(
@@ -175,7 +185,10 @@ EXAMPLE:
         required=False,
         default=None,
         type=_args_check_init,
-        help="If specified, initializes communicationexpect to receive string before sending any payload. Regex supported.",
+        help="""If specified, initializes communication in the form
+'<send>:<expect>,<send>:<expect>,...'. Where <send> is the data to be sent
+to the server and <expect> is the answer to be received from the server.
+Regex supported for <expect> part.""",
     )
     parser.add_argument(
         "-a",
@@ -185,6 +198,16 @@ EXAMPLE:
         default=None,
         type=str,
         help="If specified, will stop if answer is not received from endpoint. Regex supported.",
+    )
+    parser.add_argument(
+        "-t",
+        "--timeout",
+        metavar="float",
+        required=False,
+        default=TIMEOUT,
+        type=float,
+        help="Timeout for receiving data before declaring the endpoint as crashed. Default: "
+        + str(TIMEOUT),
     )
     parser.add_argument(
         "-d",
@@ -214,6 +237,7 @@ def main():
     rmulti = args.multiply
     prefix = args.prefix
     suffix = args.suffix
+    timeout = args.timeout
     delay = args.delay
 
     multiplier = imulti
@@ -221,7 +245,7 @@ def main():
 
     while True:
         print("------------------------------------------------------------")
-        print('%s * %s' % (char, str(multiplier)))
+        print("%s * %s" % (char, str(multiplier)))
         print("------------------------------------------------------------")
         # Create socket
         try:
@@ -272,7 +296,7 @@ def main():
                             sys.exit(0)
                 if len(recv) > 0:
                     print("Init Awaiting: %s" % (recv))
-                    succ, data = receive(s, 1024)
+                    succ, data = receive(s, timeout, 1024)
                     if not succ:
                         if multiplier == imulti:
                             print(data, file=sys.stderr)
@@ -302,7 +326,7 @@ def main():
 
         if args.answer is not None:
             print('String expected after sending: "%s"' % (args.answer))
-            succ, data = receive(s, 1024)
+            succ, data = receive(s, timeout, 1024)
             if not succ:
                 print(data, file=sys.stderr)
                 print_crashlog(prefix, suffix, char, buff)
