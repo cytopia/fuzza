@@ -157,6 +157,15 @@ def get_args():
         + str(ROUND_MULTIPLIER),
     )
     parser.add_argument(
+        "-e",
+        "--expect",
+        metavar="str",
+        required=False,
+        default=None,
+        type=str,
+        help="If specified, expect to receive string before sending any payload. Regex supported.",
+    )
+    parser.add_argument(
         "-a",
         "--answer",
         metavar="str",
@@ -230,6 +239,18 @@ def main():
                 print_crashlog(prefix, suffix, char, buff)
                 sys.exit(0)
 
+        if args.expect is not None:
+            succ, data = receive(s, 1024)
+            if not succ:
+                print(data, file=sys.stderr)
+                print_crashlog(prefix, suffix, char, buff)
+                sys.exit(0)
+            if data == args.expect:
+                print("String expected: " + args.expect, file=sys.stderr)
+                print("String received: " + data, file=sys.stderr)
+                print_crashlog(prefix, suffix, char, buff)
+                sys.exit(0)
+
         print('Sending "%s" + "%s"*%s + "%s"' % (prefix, char, multiplier, suffix))
         try:
             buff = char * multiplier
@@ -249,6 +270,11 @@ def main():
             succ, data = receive(s, 1024)
             if not succ:
                 print(data, file=sys.stderr)
+                print_crashlog(prefix, suffix, char, buff)
+                sys.exit(0)
+            if data == args.answer:
+                print("String expected: " + args.answer, file=sys.stderr)
+                print("String received: " + data, file=sys.stderr)
                 print_crashlog(prefix, suffix, char, buff)
                 sys.exit(0)
 
