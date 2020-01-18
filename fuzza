@@ -3,6 +3,7 @@
 
 from __future__ import print_function
 
+import re
 import sys
 import argparse
 import socket
@@ -240,12 +241,14 @@ def main():
                 sys.exit(0)
 
         if args.expect is not None:
+            print('Expect to receive: "%s"' % (args.expect))
             succ, data = receive(s, 1024)
             if not succ:
                 print(data, file=sys.stderr)
                 print_crashlog(prefix, suffix, char, buff)
                 sys.exit(0)
-            if data == args.expect:
+            print('Received response: "%s"' % (data))
+            if data != args.expect and not bool(re.search(args.expect, data)):
                 print("String expected: " + args.expect, file=sys.stderr)
                 print("String received: " + data, file=sys.stderr)
                 print_crashlog(prefix, suffix, char, buff)
@@ -267,12 +270,14 @@ def main():
                 sys.exit(0)
 
         if args.answer is not None:
+            print('Answer to receive: "%s"' % (args.expect))
             succ, data = receive(s, 1024)
             if not succ:
                 print(data, file=sys.stderr)
                 print_crashlog(prefix, suffix, char, buff)
                 sys.exit(0)
-            if data == args.answer:
+            print('Received response: "%s"' % (data))
+            if data != args.answer and not bool(re.search(args.answer, data)):
                 print("String expected: " + args.answer, file=sys.stderr)
                 print("String received: " + data, file=sys.stderr)
                 print_crashlog(prefix, suffix, char, buff)
