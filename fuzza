@@ -1,0 +1,200 @@
+#!/usr/bin/env python
+"""Customizable TCP fuzzer."""
+
+from __future__ import print_function
+
+import sys
+import argparse
+import socket
+from time import sleep
+
+
+# -------------------------------------------------------------------------------------------------
+# GLOBALS
+# -------------------------------------------------------------------------------------------------
+
+CHAR = "A"
+PREFIX = ""
+SUFFIX = ""
+INIT_MULTIPLIER = 100
+ROUND_MULTIPLIER = 100
+DELAY = 1.0
+
+
+# -------------------------------------------------------------------------------------------------
+# ARGS
+# -------------------------------------------------------------------------------------------------
+
+
+def _args_check_port(value):
+    """Check arguments for invalid port number."""
+    min_port = 1
+    max_port = 65535
+
+    try:
+        intvalue = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError('"%s" is an invalid port number.' % value)
+
+    if intvalue < min_port or intvalue > max_port:
+        raise argparse.ArgumentTypeError('"%s" is an invalid port number.' % value)
+    return intvalue
+
+
+def get_args():
+    """Retrieve command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Customizable TCP fuzzing tool to test for remote buffer overflows."
+    )
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version="%(prog)s 0.1.0 by cytopia",
+        help="Show version information,",
+    )
+    parser.add_argument(
+        "-c",
+        "--char",
+        metavar="char",
+        required=False,
+        default=CHAR,
+        type=str,
+        help='Buffer character to send as payload. Default: "' + CHAR + '"',
+    )
+    parser.add_argument(
+        "-p",
+        "--prefix",
+        metavar="str",
+        required=False,
+        default=PREFIX,
+        type=str,
+        help="Prefix string to prepend to buffer. Empty by default.",
+    )
+    parser.add_argument(
+        "-s",
+        "--suffix",
+        metavar="str",
+        required=False,
+        default=SUFFIX,
+        type=str,
+        help="Suffix string to append to buffer. Empty by default.",
+    )
+    parser.add_argument(
+        "-i",
+        "--init-multi",
+        metavar="int",
+        required=False,
+        default=INIT_MULTIPLIER,
+        type=int,
+        help="Initial multiplier to concat buffer string with x*char. Default: "
+        + str(INIT_MULTIPLIER),
+    )
+    parser.add_argument(
+        "-r",
+        "--round-multi",
+        metavar="int",
+        required=False,
+        default=ROUND_MULTIPLIER,
+        type=int,
+        help="Round multiplier to concat buffer string with x*char every round. Default: "
+        + str(ROUND_MULTIPLIER),
+    )
+    parser.add_argument(
+        "-d",
+        "--delay",
+        metavar="float",
+        required=False,
+        default=DELAY,
+        type=float,
+        help="Delay in seconds between each round. Default: " + str(DELAY),
+    )
+    parser.add_argument("host", type=str, help="address to connect to.")
+    parser.add_argument("port", type=_args_check_port, help="port to connect to.")
+    return parser.parse_args()
+
+
+def print_crashlog(prefix, suffix, char, buff):
+    payload = prefix + buff + suffix
+    print('\nRemote service (most likely) crashed at %s bytes of "%s"' % (str(len(buff)), char))
+    print("Payload sent:\n%s" % (payload))
+
+
+# -------------------------------------------------------------------------------------------------
+# MAIN ENTRYPOINT
+# -------------------------------------------------------------------------------------------------
+
+
+def main():
+    """Start the program."""
+    args = get_args()
+
+    char = args.char
+    imulti = args.init_multi
+    rmulti = args.round_multi
+    prefix = args.prefix
+    suffix = args.suffix
+    delay = args.delay
+
+    multiplier = imulti
+    buff = char * multiplier
+
+    while True:
+        # Create socket
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        except socket.error as msg:
+            if multiplier == imulti:
+                print(msg, file=sys.stderr)
+                sys.exit(1)
+            else:
+                print_crashlog(prefix, suffix, char, buff)
+                sys.exit(0)
+
+        # Get remote IP
+        try:
+            addr = socket.gethostbyname(args.host)
+        except socket.gaierror as msg:
+            s.close()
+            print(msg, file=sys.stderr)
+            sys.exit(1)
+
+        # Connect
+        try:
+            s.connect((addr, args.port))
+        except socket.error as msg:
+            s.close()
+            if multiplier == imulti:
+                print(msg, file=sys.stderr)
+                sys.exit(1)
+            else:
+                print_crashlog(prefix, suffix, char, buff)
+                sys.exit(0)
+
+        print('Sending "%s" + "%s"*%s + "%s"' % (prefix, char, multiplier, suffix))
+        try:
+            buff = char * multiplier
+            string = prefix + buff + suffix
+
+            s.send(string.encode())
+        except socket.error as msg:
+            s.close()
+            if multiplier == imulti:
+                print(msg, file=sys.stderr)
+                sys.exit(1)
+            else:
+                print_crashlog(prefix, suffix, char, buff)
+                sys.exit(0)
+
+        s.close()
+        sleep(delay)
+        multiplier = multiplier + rmulti
+
+
+if __name__ == "__main__":
+    # Catch Ctrl+c and exit without error message
+    try:
+        main()
+    except KeyboardInterrupt:
+        print()
+        sys.exit(1)
