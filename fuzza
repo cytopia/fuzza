@@ -49,10 +49,11 @@ def print_crashlog(prefix, suffix, char, buff):
     print("Payload sent:\n%s" % (payload))
 
 
-def receive(s, bufsize=1024):
+def receive(s, bufsize=1024, timeout=10.0):
     """Read one newline terminated line from a connected socket."""
     data = ""
     size = len(data)
+    s.settimeout(timeout)
 
     while True:
         try:
@@ -219,6 +220,9 @@ def main():
     buff = char * multiplier
 
     while True:
+        print("------------------------------------------------------------")
+        print('%s * %s' % (char, str(multiplier)))
+        print("------------------------------------------------------------")
         # Create socket
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -267,7 +271,7 @@ def main():
                             print_crashlog(prefix, suffix, char, buff)
                             sys.exit(0)
                 if len(recv) > 0:
-                    print("Init Awaiting: %s" % (send))
+                    print("Init Awaiting: %s" % (recv))
                     succ, data = receive(s, 1024)
                     if not succ:
                         print(data, file=sys.stderr)
