@@ -83,8 +83,16 @@ def receive(s, bufsize=1024):
 # -------------------------------------------------------------------------------------------------
 
 
+def _args_check_init(value):
+    """Check argument for valid init value."""
+    for comm in value.split(","):
+        if comm.find(":") == -1:
+            raise argparse.ArgumentTypeError('"%s" is an invalid init value.' % value)
+    return value
+
+
 def _args_check_port(value):
-    """Check arguments for invalid port number."""
+    """Check argument for valid port number."""
     min_port = 1
     max_port = 65535
 
@@ -101,7 +109,10 @@ def _args_check_port(value):
 def get_args():
     """Retrieve command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Customizable TCP fuzzing tool to test for remote buffer overflows."
+        description="Customizable TCP fuzzing tool to test for remote buffer overflows.",
+        epilog="""\
+EXAMPLE:
+""",
     )
     parser.add_argument(
         "-v",
@@ -138,18 +149,17 @@ def get_args():
         help="Suffix string to append to buffer. Empty by default.",
     )
     parser.add_argument(
-        "-i",
-        "--init-multi",
+        "-l",
+        "--length",
         metavar="int",
         required=False,
         default=INIT_MULTIPLIER,
         type=int,
-        help="Initial multiplier to concat buffer string with x*char. Default: "
-        + str(INIT_MULTIPLIER),
+        help="Initial length to concat buffer string with x*char. Default: " + str(INIT_MULTIPLIER),
     )
     parser.add_argument(
-        "-r",
-        "--round-multi",
+        "-m",
+        "--multiply",
         metavar="int",
         required=False,
         default=ROUND_MULTIPLIER,
@@ -158,13 +168,13 @@ def get_args():
         + str(ROUND_MULTIPLIER),
     )
     parser.add_argument(
-        "-e",
-        "--expect",
+        "-i",
+        "--init",
         metavar="str",
         required=False,
         default=None,
-        type=str,
-        help="If specified, expect to receive string before sending any payload. Regex supported.",
+        type=_args_check_init,
+        help="If specified, initializes communicationexpect to receive string before sending any payload. Regex supported.",
     )
     parser.add_argument(
         "-a",
@@ -199,8 +209,8 @@ def main():
     args = get_args()
 
     char = args.char
-    imulti = args.init_multi
-    rmulti = args.round_multi
+    imulti = args.length
+    rmulti = args.multiply
     prefix = args.prefix
     suffix = args.suffix
     delay = args.delay
@@ -240,26 +250,40 @@ def main():
                 print_crashlog(prefix, suffix, char, buff)
                 sys.exit(0)
 
-        if args.expect is not None:
-            print('Expect to receive: "%s"' % (args.expect))
-            succ, data = receive(s, 1024)
-            if not succ:
-                print(data, file=sys.stderr)
-                print_crashlog(prefix, suffix, char, buff)
-                sys.exit(0)
-            print('Received response: "%s"' % (data))
-            if data != args.expect and not bool(re.search(args.expect, data)):
-                print("String expected: " + args.expect, file=sys.stderr)
-                print("String received: " + data, file=sys.stderr)
-                print_crashlog(prefix, suffix, char, buff)
-                sys.exit(0)
+        if args.init is not None:
+            for comm in args.init.split(","):
+                send, recv = comm.split(":")
+
+                if len(send) > 0:
+                    print("Init Sending:  %s" % (send))
+                    try:
+                        s.send(send.encode() + "\r\n")
+                    except socket.error as msg:
+                        s.close()
+                        if multiplier == imulti:
+                            print(msg, file=sys.stderr)
+                            sys.exit(1)
+                        else:
+                            print_crashlog(prefix, suffix, char, buff)
+                            sys.exit(0)
+                if len(recv) > 0:
+                    print("Init Awaiting: %s" % (send))
+                    succ, data = receive(s, 1024)
+                    if not succ:
+                        print(data, file=sys.stderr)
+                        print_crashlog(prefix, suffix, char, buff)
+                        sys.exit(0)
+                    print("Init Received: %s" % (data))
+                    if data != recv and not bool(re.search(recv, data)):
+                        print_crashlog(prefix, suffix, char, buff)
+                        sys.exit(0)
 
         print('Sending "%s" + "%s"*%s + "%s"' % (prefix, char, multiplier, suffix))
         try:
             buff = char * multiplier
             string = prefix + buff + suffix
 
-            s.send(string.encode())
+            s.send(string.encode() + "\r\n")
         except socket.error as msg:
             s.close()
             if multiplier == imulti:
@@ -270,16 +294,14 @@ def main():
                 sys.exit(0)
 
         if args.answer is not None:
-            print('Answer to receive: "%s"' % (args.expect))
+            print('String expected after sending: "%s"' % (args.answer))
             succ, data = receive(s, 1024)
             if not succ:
                 print(data, file=sys.stderr)
                 print_crashlog(prefix, suffix, char, buff)
                 sys.exit(0)
-            print('Received response: "%s"' % (data))
+            print('String received after sending: "%s"' % (data))
             if data != args.answer and not bool(re.search(args.answer, data)):
-                print("String expected: " + args.answer, file=sys.stderr)
-                print("String received: " + data, file=sys.stderr)
                 print_crashlog(prefix, suffix, char, buff)
                 sys.exit(0)
 
