@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="fuzza",
-    version="0.3.0",
+    version="0.4.0",
     description="Customizable TCP fuzzing tool to test for remote buffer overflows.",
     license="MIT",
     long_description=long_description,
