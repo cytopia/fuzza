@@ -12,6 +12,11 @@
 
 Customizable TCP fuzzing tool to test for remote buffer overflows.
 
+`fuzza` is able to send and receive any initial commands prior sending the payload as well as
+sending any post commands after the payload has been sent. In order to replicate and triage the
+buffer overflow, `fuzza` can be used to generate custom python scripts for attack, badchars and
+finding the eip based on your command line arguments. See examples for more details.
+
 
 ## Installation
 ```bash
