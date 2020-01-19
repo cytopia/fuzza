@@ -180,6 +180,9 @@ def _script_pattern(host, port, prefix, suffix, length, init, exit):
         pattern_val = "("
         pattern_desc = "  # {} bytes from pattern_create.rb".format(length)
         for idx, item in enumerate(PATTERN):
+            # Only create the length we require
+            if idx == length:
+                break
             if idx % 90 == 0:
                 if idx == 0:
                     pattern_val += '\n    "'
@@ -203,7 +206,7 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 pattern = {}{}
 
 try:
-    print('Sending buffer...')
+    print('Sending %s bytes unique chars...' % (str(len(pattern))))
     s.connect(('{}', {}))
 '''.format(
         pattern_val, pattern_desc, host, port
@@ -405,7 +408,8 @@ def connect(host, port):
 def send(s, data):
     """Send data to socket."""
     try:
-        s.send(data.encode() + "\r\n")
+        data += "\r\n"
+        s.send(data.encode())
     except socket.error as msg:
         s.close()
         return (False, msg)
@@ -507,7 +511,7 @@ example:\n
         "-v",
         "--version",
         action="version",
-        version="%(prog)s 0.4.1 by cytopia",
+        version="%(prog)s 0.4.2 by cytopia",
         help="Show version information,",
     )
     parser.add_argument(
