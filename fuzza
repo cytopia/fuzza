@@ -217,18 +217,18 @@ try:
         for comm in init.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_init += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
+                code_init += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
             if len(d_expect) > 0:
                 code_init += """    s.recv(1024)\n"""
 
-    payload = """    s.send('{}' + pattern + '{}' + '\\r\\n')\n""".format(prefix, suffix)
+    payload = """    s.send(('{}' + pattern + '{}' + '\\r\\n').encode())\n""".format(prefix, suffix)
 
     code_exit = ""
     if exit is not None:
         for comm in exit.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_exit += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
+                code_exit += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
             if len(d_expect) > 0:
                 code_exit += """    s.recv(1024)\n"""
     code_tail = """    print('done')
@@ -284,18 +284,18 @@ try:
         for comm in init.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_init += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
+                code_init += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
             if len(d_expect) > 0:
                 code_init += """    s.recv(1024)\n"""
 
-    payload = """    s.send('{}' + buffer + '{}' + '\\r\\n')\n""".format(prefix, suffix)
+    payload = """    s.send(('{}' + buffer + '{}' + '\\r\\n').encode())\n""".format(prefix, suffix)
 
     code_exit = ""
     if exit is not None:
         for comm in exit.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_exit += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
+                code_exit += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
             if len(d_expect) > 0:
                 code_exit += """    s.recv(1024)\n"""
     code_tail = """    print('done')
@@ -336,18 +336,18 @@ try:
         for comm in init.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_init += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
+                code_init += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
             if len(d_expect) > 0:
                 code_init += """    s.recv(1024)\n"""
 
-    payload = """    s.send('{}' + buffer + '{}' + '\\r\\n')\n""".format(prefix, suffix)
+    payload = """    s.send(('{}' + buffer + '{}' + '\\r\\n').encode())\n""".format(prefix, suffix)
 
     code_exit = ""
     if exit is not None:
         for comm in exit.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_exit += """    s.send('{}' + '\\r\\n')\n""".format(d_send)
+                code_exit += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
             if len(d_expect) > 0:
                 code_exit += """    s.recv(1024)\n"""
     code_tail = """    print('done')
