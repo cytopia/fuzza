@@ -335,7 +335,7 @@ def main():
                             print_crashlog(prefix, suffix, char, buff)
                             sys.exit(0)
                     print("Init Received: %s" % (d_recv))
-                    if d_expect != d_recv and not bool(re.search(d_recv, d_expect)):
+                    if d_expect != d_recv and not bool(re.search(d_expect, d_recv)):
                         print_crashlog(prefix, suffix, char, buff)
                         sys.exit(0)
 
@@ -378,7 +378,7 @@ def main():
                             print_crashlog(prefix, suffix, char, buff)
                             sys.exit(0)
                     print("Exit Received: %s" % (d_recv))
-                    if d_expect != d_recv and not bool(re.search(d_recv, d_expect)):
+                    if d_expect != d_recv and not bool(re.search(d_expect, d_recv)):
                         print_crashlog(prefix, suffix, char, buff)
                         sys.exit(0)
 
