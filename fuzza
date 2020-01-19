@@ -341,7 +341,8 @@ def main():
 
         # Send payload
         print('Sending "%s" + "%s"*%s + "%s"' % (prefix, char, multiplier, suffix))
-        payload = prefix + char * multiplier + suffix
+        buff = char * multiplier
+        payload = prefix + buff + suffix
         succ, err = send(s, payload)
         if not succ:
             if multiplier == imulti:
