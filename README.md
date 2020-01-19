@@ -98,9 +98,11 @@ QUIT
 ```
 
 In order to fuzz the password, all previous communication must have happened. By using `fuzza`,
-this can be achieved with the `-i` argument to specify initial data to be send and received:
+this can be achieved with the `-i` argument to specify initial data to be send and received.
+Additionally we also want to close the connection after sending the payload (if possible).
+This can be achieved with the `-e` option which works exactly as `-i`.
 ```bash
-$ fuzz -i ':.*OK POP3.*,USER test:.*test welcome.*' -p 'PASS ' -e '.*:QUIT' mail.example.tld 110
+$ fuzz -i ':.*OK POP3.*,USER test:.*test welcome.*' -p 'PASS ' -e ':.*,QUIT:' mail.example.tld 110
 
 ------------------------------------------------------------
 A * 100
@@ -113,15 +115,21 @@ Init Received: +OK test welcome here
 Sending "PASS " + "A"*100 + ""
 Exit Awaiting: .*
 Exit Received: -ERR unable to lock mailbox
-Exit Sending:  QUI
+Exit Sending:  QUIT
 ...
 
 ------------------------------------------------------------
-A * 4000
+A * 2700
 ------------------------------------------------------------
-Init Awaiting: .*OK POP3.*
+Init Awaiting: .*POP3.*
+Init Received: +OK POP3 server mail.example.tld ready <00009.592913389@mail.example.tld>
+Init Sending:  USER test
+Init Awaiting: welcome here
+Init Received: +OK test welcome here
+Sending "PASS " + "A"*2700 + ""
+Exit Awaiting: .*
 
-Remote service (most likely) crashed at 3000 bytes of "A"
+Remote service (most likely) crashed at 2700 bytes of "A"
 Payload sent:
 PASS AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ```

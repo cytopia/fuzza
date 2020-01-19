@@ -162,8 +162,9 @@ example:\n
   (which works exactly as '-i') in order to send data after the payload.
      1. Expect any response from password payload
      2. Terminate the connection via QUIT
+     3. Do not expect a follow up response
 
-     $ fuzza -i ':.*POP3.*,USER bob:.*welcome.*' -e '.*:QUIT' -p 'PASS '
+     $ fuzza -i ':.*POP3.*,USER bob:.*welcome.*' -e ':.*,QUIT:' -p 'PASS '
 """,
     )
     parser.add_argument(
