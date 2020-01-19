@@ -44,10 +44,44 @@ def b2str(data):
         return data.decode("latin-1")
 
 
+def connect(host, port):
+    """Connect to remote host."""
+    # Create socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    except socket.error as msg:
+        return (None, msg)
+    # Get remote IP
+    try:
+        addr = socket.gethostbyname(host)
+    except socket.gaierror as msg:
+        s.close()
+        return (None, msg)
+    # Connect
+    try:
+        s.connect((addr, port))
+    except socket.error as msg:
+        s.close()
+        return (None, msg)
+
+    return (s, None)
+
+
 def print_crashlog(prefix, suffix, char, buff):
     payload = prefix + buff + suffix
     print('\nRemote service (most likely) crashed at %s bytes of "%s"' % (str(len(buff)), char))
     print("Payload sent:\n%s" % (payload))
+
+
+def send(s, data):
+    """Send data to socket."""
+    try:
+        s.send(data.encode() + "\r\n")
+    except socket.error as msg:
+        s.close()
+        return (False, msg)
+
+    return (True, None)
 
 
 def receive(s, timeout, bufsize=1024):
@@ -122,14 +156,22 @@ example:\n
       3. Expecting a welcome message
   Additionally before sending the fuzzing characters, it is prepended with 'PASS ',
   so that the actuall fuzzing can be done on the password:
-      $ fuzza -i ':.*POP3.*,USER bob:.*welcome.*' -p 'PASS '
+     1. Prefix payload with 'PASS '
+     2. Send payload
+  Lastly in order to also close the connection the '-e' opton is used
+  (which works exactly as '-i') in order to send data after the payload.
+     1. Expect any response from password payload
+     2. Terminate the connection via QUIT
+     3. Do not expect a follow up response
+
+     $ fuzza -i ':.*POP3.*,USER bob:.*welcome.*' -e ':.*,QUIT:' -p 'PASS '
 """,
     )
     parser.add_argument(
         "-v",
         "--version",
         action="version",
-        version="%(prog)s 0.2.0 by cytopia",
+        version="%(prog)s 0.3.0 by cytopia",
         help="Show version information,",
     )
     parser.add_argument(
@@ -185,19 +227,28 @@ example:\n
         required=False,
         default=None,
         type=_args_check_init,
-        help="""If specified, initializes communication in the form
+        help="""If specified, initializes communication before sending the payload in the form
 '<send>:<expect>,<send>:<expect>,...'. Where <send> is the data to be sent
 to the server and <expect> is the answer to be received from the server.
+Either one of <send> or <expect> can be omitted if you expect something without
+having sent data yet or need to send something for which there will not be an
+answer. Multiple <send>:<expect> are supported and must be separated by a comma.
 Regex supported for <expect> part.""",
     )
     parser.add_argument(
-        "-a",
-        "--answer",
+        "-e",
+        "--exit",
         metavar="str",
         required=False,
         default=None,
-        type=str,
-        help="If specified, will stop if answer is not received from endpoint. Regex supported.",
+        type=_args_check_init,
+        help="""If specified, finalizes communication after sending the payload in the form
+'<send>:<expect>,<send>:<expect>,...'. Where <send> is the data to be sent
+to the server and <expect> is the answer to be received from the server.
+Either one of <send> or <expect> can be omitted if you expect something without
+having sent data yet or need to send something for which there will not be an
+answer. Multiple <send>:<expect> are supported and must be separated by a comma.
+Regex supported for <expect> part.""",
     )
     parser.add_argument(
         "-t",
@@ -247,94 +298,91 @@ def main():
         print("------------------------------------------------------------")
         print("%s * %s" % (char, str(multiplier)))
         print("------------------------------------------------------------")
-        # Create socket
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        except socket.error as msg:
-            if multiplier == imulti:
-                print(msg, file=sys.stderr)
-                sys.exit(1)
-            else:
-                print_crashlog(prefix, suffix, char, buff)
-                sys.exit(0)
-
-        # Get remote IP
-        try:
-            addr = socket.gethostbyname(args.host)
-        except socket.gaierror as msg:
-            s.close()
-            print(msg, file=sys.stderr)
-            sys.exit(1)
 
         # Connect
-        try:
-            s.connect((addr, args.port))
-        except socket.error as msg:
-            s.close()
+        s, err = connect(args.host, args.port)
+        if s is None:
             if multiplier == imulti:
-                print(msg, file=sys.stderr)
+                print(err, file=sys.stderr)
                 sys.exit(1)
             else:
                 print_crashlog(prefix, suffix, char, buff)
                 sys.exit(0)
 
+        # Initial communication
         if args.init is not None:
             for comm in args.init.split(","):
-                send, recv = comm.split(":")
-
-                if len(send) > 0:
-                    print("Init Sending:  %s" % (send))
-                    try:
-                        s.send(send.encode() + "\r\n")
-                    except socket.error as msg:
-                        s.close()
-                        if multiplier == imulti:
-                            print(msg, file=sys.stderr)
-                            sys.exit(1)
-                        else:
-                            print_crashlog(prefix, suffix, char, buff)
-                            sys.exit(0)
-                if len(recv) > 0:
-                    print("Init Awaiting: %s" % (recv))
-                    succ, data = receive(s, timeout, 1024)
+                d_send, d_expect = comm.split(":")
+                # Send data?
+                if len(d_send) > 0:
+                    print("Init Sending:  %s" % (d_send))
+                    succ, err = send(s, d_send)
                     if not succ:
                         if multiplier == imulti:
-                            print(data, file=sys.stderr)
+                            print(err, file=sys.stderr)
                             sys.exit(1)
                         else:
                             print_crashlog(prefix, suffix, char, buff)
                             sys.exit(0)
-                    print("Init Received: %s" % (data))
-                    if data != recv and not bool(re.search(recv, data)):
+                # Expect data?
+                if len(d_expect) > 0:
+                    print("Init Awaiting: %s" % (d_expect))
+                    succ, d_recv = receive(s, timeout, 1024)
+                    if not succ:
+                        if multiplier == imulti:
+                            print(d_recv, file=sys.stderr)
+                            sys.exit(1)
+                        else:
+                            print_crashlog(prefix, suffix, char, buff)
+                            sys.exit(0)
+                    print("Init Received: %s" % (d_recv))
+                    if d_expect != d_recv and not bool(re.search(d_expect, d_recv)):
                         print_crashlog(prefix, suffix, char, buff)
                         sys.exit(0)
 
+        # Send payload
         print('Sending "%s" + "%s"*%s + "%s"' % (prefix, char, multiplier, suffix))
-        try:
-            buff = char * multiplier
-            string = prefix + buff + suffix
-
-            s.send(string.encode() + "\r\n")
-        except socket.error as msg:
-            s.close()
+        buff = char * multiplier
+        payload = prefix + buff + suffix
+        succ, err = send(s, payload)
+        if not succ:
             if multiplier == imulti:
-                print(msg, file=sys.stderr)
+                print(err, file=sys.stderr)
                 sys.exit(1)
             else:
                 print_crashlog(prefix, suffix, char, buff)
                 sys.exit(0)
 
-        if args.answer is not None:
-            print('String expected after sending: "%s"' % (args.answer))
-            succ, data = receive(s, timeout, 1024)
-            if not succ:
-                print(data, file=sys.stderr)
-                print_crashlog(prefix, suffix, char, buff)
-                sys.exit(0)
-            print('String received after sending: "%s"' % (data))
-            if data != args.answer and not bool(re.search(args.answer, data)):
-                print_crashlog(prefix, suffix, char, buff)
-                sys.exit(0)
+        # Exit communication
+        if args.exit is not None:
+            for comm in args.exit.split(","):
+                d_send, d_expect = comm.split(":")
+                # Send data?
+                if len(d_send) > 0:
+                    print("Exit Sending:  %s" % (d_send))
+                    succ, err = send(s, d_send)
+                    if not succ:
+                        if multiplier == imulti:
+                            print(err, file=sys.stderr)
+                            sys.exit(1)
+                        else:
+                            print_crashlog(prefix, suffix, char, buff)
+                            sys.exit(0)
+                # Expect data?
+                if len(d_expect) > 0:
+                    print("Exit Awaiting: %s" % (d_expect))
+                    succ, d_recv = receive(s, timeout, 1024)
+                    if not succ:
+                        if multiplier == imulti:
+                            print(d_recv, file=sys.stderr)
+                            sys.exit(1)
+                        else:
+                            print_crashlog(prefix, suffix, char, buff)
+                            sys.exit(0)
+                    print("Exit Received: %s" % (d_recv))
+                    if d_expect != d_recv and not bool(re.search(d_expect, d_recv)):
+                        print_crashlog(prefix, suffix, char, buff)
+                        sys.exit(0)
 
         s.close()
         sleep(delay)
