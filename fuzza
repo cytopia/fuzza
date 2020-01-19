@@ -145,6 +145,14 @@ PATTERN = (
 # -------------------------------------------------------------------------------------------------
 
 
+def str2b(data):
+    """Convert string into byte type."""
+    try:
+        return data.encode("latin1")
+    except UnicodeDecodeError:
+        return data
+
+
 def b2str(data):
     """Convert bytes into string type."""
     try:
@@ -201,6 +209,13 @@ def _script_pattern(host, port, prefix, suffix, length, init, exit):
 from __future__ import print_function
 import socket
 
+def str2b(data):
+    """Python2/3 compat."""
+    try:
+        return data.encode('latin1')
+    except UnicodeDecodeError:
+        return data
+
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 pattern = {}{}
@@ -217,18 +232,18 @@ try:
         for comm in init.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_init += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
+                code_init += """    s.send(str2b('{}' + '\\r\\n'))\n""".format(d_send)
             if len(d_expect) > 0:
                 code_init += """    s.recv(1024)\n"""
 
-    payload = """    s.send(('{}' + pattern + '{}' + '\\r\\n').encode())\n""".format(prefix, suffix)
+    payload = """    s.send(str2b('{}' + pattern + '{}' + '\\r\\n'))\n""".format(prefix, suffix)
 
     code_exit = ""
     if exit is not None:
         for comm in exit.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_exit += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
+                code_exit += """    s.send(str2b('{}' + '\\r\\n'))\n""".format(d_send)
             if len(d_expect) > 0:
                 code_exit += """    s.recv(1024)\n"""
     code_tail = """    print('done')
@@ -245,6 +260,13 @@ def _script_badchars(host, port, char, prefix, suffix, length, init, exit):
 
 from __future__ import print_function
 import socket
+
+def str2b(data):
+    """Python2/3 compat."""
+    try:
+        return data.encode('latin1')
+    except UnicodeDecodeError:
+        return data
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -283,18 +305,18 @@ try:
         for comm in init.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_init += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
+                code_init += """    s.send(str2b('{}' + '\\r\\n'))\n""".format(d_send)
             if len(d_expect) > 0:
                 code_init += """    s.recv(1024)\n"""
 
-    payload = """    s.send(('{}' + buffer + '{}' + '\\r\\n').encode())\n""".format(prefix, suffix)
+    payload = """    s.send(str2b('{}' + buffer + '{}' + '\\r\\n'))\n""".format(prefix, suffix)
 
     code_exit = ""
     if exit is not None:
         for comm in exit.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_exit += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
+                code_exit += """    s.send(str2b('{}' + '\\r\\n'))\n""".format(d_send)
             if len(d_expect) > 0:
                 code_exit += """    s.recv(1024)\n"""
     code_tail = """    print('done')
@@ -311,6 +333,13 @@ def _script_attack(host, port, char, prefix, suffix, length, init, exit):
 
 from __future__ import print_function
 import socket
+
+def str2b(data):
+    """Python2/3 compat."""
+    try:
+        return data.encode('latin1')
+    except UnicodeDecodeError:
+        return data
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -335,18 +364,18 @@ try:
         for comm in init.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_init += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
+                code_init += """    s.send(str2b('{}' + '\\r\\n'))\n""".format(d_send)
             if len(d_expect) > 0:
                 code_init += """    s.recv(1024)\n"""
 
-    payload = """    s.send(('{}' + buffer + '{}' + '\\r\\n').encode())\n""".format(prefix, suffix)
+    payload = """    s.send(str2b('{}' + buffer + '{}' + '\\r\\n'))\n""".format(prefix, suffix)
 
     code_exit = ""
     if exit is not None:
         for comm in exit.split(","):
             d_send, d_expect = comm.split(":")
             if len(d_send) > 0:
-                code_exit += """    s.send(('{}' + '\\r\\n').encode())\n""".format(d_send)
+                code_exit += """    s.send(str2b('{}' + '\\r\\n'))\n""".format(d_send)
             if len(d_expect) > 0:
                 code_exit += """    s.recv(1024)\n"""
     code_tail = """    print('done')
@@ -408,7 +437,7 @@ def send(s, data):
     """Send data to socket."""
     try:
         data += "\r\n"
-        s.send(data.encode())
+        s.send(str2b(data))
     except socket.error as msg:
         s.close()
         return (False, msg)
@@ -510,7 +539,7 @@ example:\n
         "-v",
         "--version",
         action="version",
-        version="%(prog)s 0.4.2 by cytopia",
+        version="%(prog)s 0.4.3 by cytopia",
         help="Show version information,",
     )
     parser.add_argument(
