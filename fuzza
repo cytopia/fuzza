@@ -711,7 +711,9 @@ def main():
 
     # Generate triage scripts
     if gen:
-        generate(gen, args.host, args.port, char, prefix, suffix, crlf, args.length, args.init, args.exit)
+        generate(
+            gen, args.host, args.port, char, prefix, suffix, crlf, args.length, args.init, args.exit
+        )
         return
 
     # Fuzz
