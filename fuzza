@@ -597,9 +597,9 @@ Visit https://github.com/cytopia/fuzza for more examples.
         default=DEF_INIT_MULTIPLIER,
         type=int,
         help="""Initial length to concat buffer string with x*char.
-When using the '-g' option to generate reproducible attack scripts set this to the
-value at which the crash occured in order to pre-populate the generated scripts.
-"""
+When using the '-g' option to generate reproducible attack scripts set this
+to the value at which the crash occured in order to pre-populate the
+generated scripts. """
         + "Default: "
         + str(DEF_INIT_MULTIPLIER),
     )
@@ -610,7 +610,9 @@ value at which the crash occured in order to pre-populate the generated scripts.
         required=False,
         default=DEF_ROUND_MULTIPLIER,
         type=int,
-        help="Round multiplier to concat buffer string with x*char every round. Default: "
+        help="""Round multiplier to concat buffer string with x*char every round.
+"""
+        + "Default: "
         + str(DEF_ROUND_MULTIPLIER),
     )
     parser.add_argument(
@@ -620,12 +622,13 @@ value at which the crash occured in order to pre-populate the generated scripts.
         required=False,
         default=None,
         type=_args_check_init,
-        help="""If specified, initializes communication before sending the payload in the form
-'<send>:<expect>,<send>:<expect>,...'. Where <send> is the data to be sent
-to the server and <expect> is the answer to be received from the server.
-Either one of <send> or <expect> can be omitted if you expect something without
-having sent data yet or need to send something for which there will not be an
-answer. Multiple <send>:<expect> are supported and must be separated by a comma.
+        help="""If specified, initializes communication before sending the payload in the
+form '<send>:<expect>,<send>:<expect>,...'. Where <send> is the data to be
+sent to the server and <expect> is the answer to be received from the
+server.  Either one of <send> or <expect> can be omitted if you expect
+something without having sent data yet or need to send something for which
+there will not be an answer. Multiple <send>:<expect> are supported and
+must be separated by a comma.
 Regex supported for <expect> part.""",
     )
     parser.add_argument(
@@ -635,12 +638,13 @@ Regex supported for <expect> part.""",
         required=False,
         default=None,
         type=_args_check_init,
-        help="""If specified, finalizes communication after sending the payload in the form
-'<send>:<expect>,<send>:<expect>,...'. Where <send> is the data to be sent
-to the server and <expect> is the answer to be received from the server.
-Either one of <send> or <expect> can be omitted if you expect something without
-having sent data yet or need to send something for which there will not be an
-answer. Multiple <send>:<expect> are supported and must be separated by a comma.
+        help="""If specified, finalizes communication after sending the payload in the
+form '<send>:<expect>,<send>:<expect>,...'. Where <send> is the data to be
+sent to the server and <expect> is the answer to be received from the
+server.  Either one of <send> or <expect> can be omitted if you expect
+something without having sent data yet or need to send something for
+which there will not be an answer. Multiple <send>:<expect> are supported
+and must be separated by a comma.
 Regex supported for <expect> part.""",
     )
     parser.add_argument(
@@ -658,8 +662,8 @@ Regex supported for <expect> part.""",
         required=False,
         default=DEF_TIMEOUT,
         type=float,
-        help="""Timeout in seconds for receiving data before declaring
-the endpoint as crashed. Default: """
+        help="""Timeout in sec for receiving data before declaring the endpoint as crashed.
+Default: """
         + str(DEF_TIMEOUT),
     )
     parser.add_argument(
@@ -679,8 +683,8 @@ the endpoint as crashed. Default: """
         default=None,
         type=_args_check_dir,
         help="""Generate custom python scripts based on your command line arguments
-to reproduce and triage the overflow. Requires a directory to be specified where to
-save the scripts to.""",
+to reproduce and triage the overflow. Requires a directory to be
+specified where to save the scripts to.""",
     )
     parser.add_argument("host", type=str, help="IP or hostname to connect to.")
     parser.add_argument("port", type=_args_check_port, help="Port to connect to.")
