@@ -758,7 +758,7 @@ def main():
                 d_send, d_expect = comm.split(":")
                 # Send data?
                 if len(d_send) > 0:
-                    print("Init Sending:  %s" % (d_send))
+                    print("Init Sending:    %s" % (d_send))
                     succ, err = send(s, d_send)
                     if not succ:
                         if multiplier == imulti:
@@ -769,7 +769,7 @@ def main():
                             sys.exit(0)
                 # Expect data?
                 if len(d_expect) > 0:
-                    print("Init Awaiting: %s" % (d_expect))
+                    print("Init Awaiting:   %s" % (d_expect))
                     succ, d_recv = receive(s, timeout, 1024)
                     if not succ:
                         if multiplier == imulti:
@@ -778,13 +778,13 @@ def main():
                         else:
                             print_crashlog(prefix, suffix, char, buff)
                             sys.exit(0)
-                    print("Init Received: %s" % (d_recv))
+                    print("Init Received:   %s" % (d_recv))
                     if d_expect != d_recv and not bool(re.search(d_expect, d_recv)):
                         print_crashlog(prefix, suffix, char, buff)
                         sys.exit(0)
 
         # Send payload
-        print('Sending "%s" + "%s"*%s + "%s"' % (prefix, char, multiplier, suffix))
+        print('Sending Payload: "%s" + "%s"*%s + "%s"' % (prefix, char, multiplier, suffix))
         buff = char * multiplier
         payload = prefix + buff + suffix
         succ, err = send(s, payload)
@@ -802,7 +802,7 @@ def main():
                 d_send, d_expect = comm.split(":")
                 # Send data?
                 if len(d_send) > 0:
-                    print("Exit Sending:  %s" % (d_send))
+                    print("Exit Sending:    %s" % (d_send))
                     succ, err = send(s, d_send)
                     if not succ:
                         if multiplier == imulti:
@@ -813,7 +813,7 @@ def main():
                             sys.exit(0)
                 # Expect data?
                 if len(d_expect) > 0:
-                    print("Exit Awaiting: %s" % (d_expect))
+                    print("Exit Awaiting:   %s" % (d_expect))
                     succ, d_recv = receive(s, timeout, 1024)
                     if not succ:
                         if multiplier == imulti:
@@ -822,7 +822,7 @@ def main():
                         else:
                             print_crashlog(prefix, suffix, char, buff)
                             sys.exit(0)
-                    print("Exit Received: %s" % (d_recv))
+                    print("Exit Received:   %s" % (d_recv))
                     if d_expect != d_recv and not bool(re.search(d_expect, d_recv)):
                         print_crashlog(prefix, suffix, char, buff)
                         sys.exit(0)
