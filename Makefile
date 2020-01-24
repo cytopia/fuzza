@@ -5,7 +5,7 @@ endif
 # -------------------------------------------------------------------------------------------------
 # Default configuration
 # -------------------------------------------------------------------------------------------------
-.PHONY: help lint pycodestyle pydocstyle black dist sdist bdist build checkbuild deploy autoformat clean
+.PHONY: help lint pycodestyle pydocstyle black test dist sdist bdist build checkbuild deploy autoformat clean
 
 
 VERSION = 2.7
@@ -15,6 +15,7 @@ VERSION = 2.7
 # -------------------------------------------------------------------------------------------------
 help:
 	@echo "lint             Lint source code"
+	@echo "test             Test source code"
 	@echo "build            Build Python package"
 	@echo "dist             Create source and binary distribution"
 	@echo "sdist            Create source distribution"
@@ -37,6 +38,24 @@ pydocstyle:
 black:
 	docker run --rm -v ${PWD}:/data cytopia/black -l 100 --check --diff fuzza
 
+
+# -------------------------------------------------------------------------------------------------
+# Test Targets
+# -------------------------------------------------------------------------------------------------
+
+test:
+	mkdir -p tests/generated
+	docker run \
+		--rm \
+		$$(tty -s && echo "-it" || echo) \
+		-v $(PWD):/data \
+		-w /data \
+		-u $$(id -u):$$(id -g) \
+		python:$(VERSION)-alpine \
+		./fuzza -i ':.*OK POP3.*,USER test\r\n:.*test welcome.*' -p 'PASS ' -s '\r\n' -e ':.*,QUIT\r\n:' -l 2700 -g tests/generated mail.example.tld 110
+	diff tests/expected/attack.py tests/generated/attack.py
+	diff tests/expected/badchars.py tests/generated/badchars.py
+	diff tests/expected/pattern.py tests/generated/pattern.py
 
 # -------------------------------------------------------------------------------------------------
 # Build Targets

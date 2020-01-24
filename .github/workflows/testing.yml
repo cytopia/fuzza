@@ -1,0 +1,39 @@
+---
+
+###
+### Tests code generation
+###
+
+name: testing
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+    tags:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: False
+      matrix:
+        python:
+          - '2.7'
+          - '3.6'
+          - '3.7'
+          - '3.8'
+        target:
+          - test
+
+    name: "[ ${{ matrix.target }} ${{ matrix.python }} ]"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@master
+
+      - name: test
+        run: |
+          make ${target} VERSION=${python}
+        env:
+          target: ${{ matrix.target }}
+          python: ${{ matrix.python }}
