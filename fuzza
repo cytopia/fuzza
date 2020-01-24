@@ -816,12 +816,8 @@ def main():
                     print("Exit Awaiting:   \"%s\"" % (d_expect))
                     succ, d_recv = receive(s, timeout, 1024)
                     if not succ:
-                        if multiplier == imulti:
-                            print(d_recv, file=sys.stderr)
-                            sys.exit(1)
-                        else:
-                            print_crashlog(prefix, suffix, char, buff)
-                            sys.exit(0)
+                        print_crashlog(prefix, suffix, char, buff)
+                        sys.exit(0)
                     print("Exit Received:   \"\033[92m%s\033[00m\"" % (d_recv))
                     if d_expect != d_recv and not bool(re.search(d_expect, d_recv)):
                         print_crashlog(prefix, suffix, char, buff)
