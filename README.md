@@ -9,6 +9,8 @@
 [![PyPI - License](https://img.shields.io/pypi/l/fuzza)](https://pypi.org/project/fuzza/)
 
 [![Build Status](https://github.com/cytopia/fuzza/workflows/linting/badge.svg)](https://github.com/cytopia/fuzza/actions?workflow=linting)
+[![Build Status](https://github.com/cytopia/fuzza/workflows/testing/badge.svg)](https://github.com/cytopia/fuzza/actions?workflow=testing)
+[![Build Status](https://github.com/cytopia/fuzza/workflows/building/badge.svg)](https://github.com/cytopia/fuzza/actions?workflow=building)
 
 Customizable TCP fuzzing tool to test for remote buffer overflows.
 

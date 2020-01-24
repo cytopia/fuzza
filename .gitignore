@@ -1,3 +1,4 @@
 fuzza.egg-info/
 build/
 dist/
+tests/generated
