@@ -150,14 +150,14 @@ def str2b(data):
     """Unescape P2/P3 and convert to bytes if Python3."""
     # Python2: Unescape control chars
     try:
-        return data.decode('string_escape')
+        return data.decode("string_escape")
     except AttributeError:
         pass
     except UnicodeDecodeError:
         pass
     # Python3: Unescape control chars and convert to byte
     try:
-        return data.encode("utf-8").decode('unicode-escape').encode("latin1")
+        return data.encode("utf-8").decode("unicode-escape").encode("latin1")
     except UnicodeDecodeError:
         pass
 
@@ -731,9 +731,7 @@ def main():
 
     # Generate triage scripts
     if gen:
-        generate(
-            gen, args.host, args.port, char, prefix, suffix, args.length, args.init, args.exit
-        )
+        generate(gen, args.host, args.port, char, prefix, suffix, args.length, args.init, args.exit)
         return
 
     # Fuzz
@@ -758,7 +756,7 @@ def main():
                 d_send, d_expect = comm.split(":")
                 # Send data?
                 if len(d_send) > 0:
-                    print("Init Sending:    \"\033[91m%s\033[00m\"" % (d_send))
+                    print('Init Sending:    "\033[91m%s\033[00m"' % (d_send))
                     succ, err = send(s, d_send)
                     if not succ:
                         if multiplier == imulti:
@@ -769,7 +767,7 @@ def main():
                             sys.exit(0)
                 # Expect data?
                 if len(d_expect) > 0:
-                    print("Init Awaiting:   \"%s\"" % (d_expect))
+                    print('Init Awaiting:   "%s"' % (d_expect))
                     succ, d_recv = receive(s, timeout, 1024)
                     if not succ:
                         if multiplier == imulti:
@@ -778,13 +776,18 @@ def main():
                         else:
                             print_crashlog(prefix, suffix, char, buff)
                             sys.exit(0)
-                    print("Init Received:   \"\033[92m%s\033[00m\"" % (d_recv))
+                    print('Init Received:   "\033[92m%s\033[00m"' % (d_recv))
                     if d_expect != d_recv and not bool(re.search(d_expect, d_recv)):
                         print_crashlog(prefix, suffix, char, buff)
                         sys.exit(0)
 
         # Send payload
-        print('Sending Payload: "\033[91m%s\033[00m" \033[93m+\033[00m "\033[91m%s\033[00m"\033[93m*%s\033[00m \033[93m+\033[00m "\033[91m%s\033[00m"' % (prefix, char, multiplier, suffix))
+        print(
+            "Sending Payload: "
+            + '"{r}{p}{d}" {r}+{d} "{r}{c}{d}"{r}*{m}{d} {r}+{d} "{r}{s}{d}"'.format(
+                r="\033[91m", d="\033[00m", p=prefix, c=char, m=multiplier, s=suffix
+            )
+        )
         buff = char * multiplier
         payload = prefix + buff + suffix
         succ, err = send(s, payload)
@@ -802,7 +805,7 @@ def main():
                 d_send, d_expect = comm.split(":")
                 # Send data?
                 if len(d_send) > 0:
-                    print("Exit Sending:    \"\033[91m%s\033[00m\"" % (d_send))
+                    print('Exit Sending:    "\033[91m%s\033[00m"' % (d_send))
                     succ, err = send(s, d_send)
                     if not succ:
                         if multiplier == imulti:
@@ -813,12 +816,12 @@ def main():
                             sys.exit(0)
                 # Expect data?
                 if len(d_expect) > 0:
-                    print("Exit Awaiting:   \"%s\"" % (d_expect))
+                    print('Exit Awaiting:   "%s"' % (d_expect))
                     succ, d_recv = receive(s, timeout, 1024)
                     if not succ:
                         print_crashlog(prefix, suffix, char, buff)
                         sys.exit(0)
-                    print("Exit Received:   \"\033[92m%s\033[00m\"" % (d_recv))
+                    print('Exit Received:   "\033[92m%s\033[00m"' % (d_recv))
                     if d_expect != d_recv and not bool(re.search(d_expect, d_recv)):
                         print_crashlog(prefix, suffix, char, buff)
                         sys.exit(0)
