@@ -219,11 +219,19 @@ from __future__ import print_function
 import socket
 
 def str2b(data):
-    """Python2/3 compat."""
+    """Unescape P2/P3 and convert to bytes if Python3."""
+    # Python2: Unescape control chars
     try:
-        return data.encode('latin1')
+        return data.decode('string_escape')
+    except AttributeError:
+        pass
     except UnicodeDecodeError:
-        return data
+        pass
+    # Python3: Unescape control chars and convert to byte
+    try:
+        return data.encode("utf-8").decode('unicode-escape').encode("latin1")
+    except UnicodeDecodeError:
+        pass
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -273,11 +281,19 @@ from __future__ import print_function
 import socket
 
 def str2b(data):
-    """Python2/3 compat."""
+    """Unescape P2/P3 and convert to bytes if Python3."""
+    # Python2: Unescape control chars
     try:
-        return data.encode('latin1')
+        return data.decode('string_escape')
+    except AttributeError:
+        pass
     except UnicodeDecodeError:
-        return data
+        pass
+    # Python3: Unescape control chars and convert to byte
+    try:
+        return data.encode("utf-8").decode('unicode-escape').encode("latin1")
+    except UnicodeDecodeError:
+        pass
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -348,11 +364,19 @@ from __future__ import print_function
 import socket
 
 def str2b(data):
-    """Python2/3 compat."""
+    """Unescape P2/P3 and convert to bytes if Python3."""
+    # Python2: Unescape control chars
     try:
-        return data.encode('latin1')
+        return data.decode('string_escape')
+    except AttributeError:
+        pass
     except UnicodeDecodeError:
-        return data
+        pass
+    # Python3: Unescape control chars and convert to byte
+    try:
+        return data.encode("utf-8").decode('unicode-escape').encode("latin1")
+    except UnicodeDecodeError:
+        pass
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
