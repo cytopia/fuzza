@@ -20,7 +20,13 @@ buffer overflow, `fuzza` can be used to generate custom python scripts for attac
 finding the eip based on your command line arguments. See examples for more details.
 
 
-## Features
+## :tada: Installation
+```bash
+pip install fuzza
+```
+
+
+## :star: Features
 
 * Works similar to [generic_send_tcp](https://www.codeproject.com/articles/19307/generic-tcp-ip-client-server), but instructions are specified via command line arguments
 * Has an [expect](https://linux.die.net/man/1/expect)-like feature to wait for a specific response which also supports regex
@@ -28,13 +34,7 @@ finding the eip based on your command line arguments. See examples for more deta
 * Works with Python2 and Python3
 
 
-## Installation
-```bash
-pip install fuzza
-```
-
-
-## Usage
+## :computer: Usage
 ```bash
 $ fuzza --help
 
@@ -113,7 +113,7 @@ Visit https://github.com/cytopia/fuzza for more examples.
 ```
 
 
-## Modes
+## :zap: Modes
 
 ### Normal
 
@@ -316,7 +316,7 @@ s.close()
 ```
 
 
-## Examples
+## :bulb: Examples
 
 ### SLMail 5.5 Buffer overflow
 
@@ -579,12 +579,36 @@ s.close()
 ```
 
 
-## Disclaimer
+## :lock: [cytopia](https://github.com/cytopia) sec tools
+
+Below is a list of other sec tools I am maintaining.
+
+| Tool                 | Category             | Language   | Description |
+|----------------------|----------------------|------------|-------------|
+| **[smtp-user-enum]** | Enumeration          | Python 2+3 | SMTP users enumerator |
+| **[urlbuster]**      | Enumeration          | Python 2+3 | Mutable web directory fuzzer |
+| **[netcat]**         | Pivoting             | Python 2+3 | Cross-platform netcat |
+| **[badchars]**       | Reverse Engineering  | Python 2+3 | Badchar generator |
+| **[fuzza]**          | Reverse Engineering  | Python 2+3 | TCP fuzzing tool |
+
+[netcat]: https://github.com/cytopia/netcat
+[smtp-user-enum]: https://github.com/cytopia/smtp-user-enum
+[urlbuster]: https://github.com/cytopia/urlbuster
+[badchars]: https://github.com/cytopia/badchars
+[fuzza]: https://github.com/cytopia/fuzza
+
+
+## :octocat: Contributing
+
+See **[Contributing guidelines](CONTRIBUTING.md)** to help to improve this project.
+
+
+## :exclamation: Disclaimer
 
 This tool may be used for legal purposes only. Users take full responsibility for any actions performed using this tool. The author accepts no liability for damage caused by this tool. If these terms are not acceptable to you, then do not use this tool.
 
 
-## License
+## :page_facing_up: License
 
 **[MIT License](LICENSE.txt)**
 
