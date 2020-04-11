@@ -13,7 +13,7 @@ setup(
     author="cytopia",
     author_email="cytopia@everythingcli.org",
     url="https://github.com/cytopia/fuzza",
-    install_requires=["argparse", "future"],
+    install_requires=[],
     scripts=[
         "fuzza"
     ],
